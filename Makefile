@@ -78,3 +78,8 @@ rector-apply: ## Applique les modifications suggérées par Rector
 
 swagger-generate: ## Génère la documentation Swagger/OpenAPI
 	php artisan l5-swagger:generate
+
+# Note: CI/CD est configuré avec :
+# - GitHub Actions : .github/workflows/ci.yml (s'exécute automatiquement sur push/PR)
+# - GitLab CI/CD : .gitlab-ci.yml (s'exécute automatiquement sur merge requests)
+# Les commandes ci-dessus peuvent être exécutées localement ou dans les pipelines CI/CD
