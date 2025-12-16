@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  tests:
+    name: Tests PHPUnit
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3']
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, bcmath, pdo, pdo_mysql, pdo_sqlite, intl, zip
+          coverage: none
+      
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      
+      - name: Generate Application Key
+        run: php artisan key:generate
+      
+      - name: Prepare PHPStan config
+        run: cp phpstan.neon.txt phpstan.neon || true
+      
+      - name: Run Tests (Unit only)
+        run: php artisan test --testsuite=Unit
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          APP_ENV: testing
+      
+      - name: Run Tests (without Browser)
+        run: php artisan test --exclude-testsuite=Browser
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          APP_ENV: testing
+
+  phpstan:
+    name: PHPStan Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, bcmath, pdo, pdo_sqlite, intl, zip
+          coverage: none
+      
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      
+      - name: Prepare PHPStan config
+        run: cp phpstan.neon.txt phpstan.neon || true
+      
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+
+  pint:
+    name: Laravel Pint Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, bcmath
+          coverage: none
+      
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      
+      - name: Run Pint Check
+        run: vendor/bin/pint --test
+
+  quality-all:
+    name: Quality Check (PHPStan + Pint)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, bcmath, pdo, pdo_sqlite, intl, zip
+          coverage: none
+      
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      
+      - name: Prepare PHPStan config
+        run: cp phpstan.neon.txt phpstan.neon || true
+      
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+      
+      - name: Run Pint Check
+        run: vendor/bin/pint --test
+
+  build-assets:
+    name: Build Frontend Assets
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build Assets
+        run: npm run build
+
