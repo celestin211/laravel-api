@@ -11,6 +11,7 @@ use Tests\TestCase;
 class NotSpecificationTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_is_satisfied_by_returns_true_when_specification_fails(): void
     {
         $offer = Offer::factory()->create(['state' => 'draft']);
