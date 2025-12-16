@@ -81,7 +81,7 @@ Votre mission est d’améliorer techniquement l’application existante autour 
 - Politique de sécurité (Policies/Gates), middleware d’auth, rate limiting, validation d’input stricte.
 - ✅ Documentation API (OpenAPI/Swagger), versionnement API, pagination/tri/filtrage RESTful.
 - Optimisations perfs (index DB, N+1, caches, Eager Loading par défaut, Scopes).
-- ✅ CI/CD (GitLab CI/CD) exécutant lint + static analysis + tests.
+- ✅ CI/CD (GitLab CI/CD et GitHub Actions) exécutant lint + static analysis + tests.
 - Docker/Sail prêt à l’emploi, Makefile ou scripts pour simplifier les commandes.
 - Observers, Events/Listeners, Notifications, Queues (jobs pour traitement d’images par ex.).
 
@@ -1411,10 +1411,11 @@ Si j'avais eu plus de temps (2-3 heures supplémentaires), j'aurais implémenté
    - Génération de thumbnails
    - Tests du traitement d'images
 
-7. ✅ **CI/CD (GitLab CI/CD)** (~1h)
+7. ✅ **CI/CD (GitLab CI/CD et GitHub Actions)** (~1h)
    - Pipeline GitLab CI/CD configuré pour automatiser les tests
-   - Exécution de PHPStan, Pint et tests à chaque merge request
-   - Configuration complète dans `.gitlab-ci.yml`
+   - Workflow GitHub Actions pour tests, PHPStan et Pint
+   - Exécution de PHPStan, Pint et tests à chaque merge request / pull request
+   - Configuration complète dans `.gitlab-ci.yml` et `.github/workflows/ci.yml`
    - Badge de statut dans le README (optionnel)
 
 8. **Monitoring et logging structuré** (~0.5h)
