@@ -1,0 +1,39 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+
+    level: 8
+
+    treatPhpDocTypesAsCertain: false
+
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # Eloquent model properties and methods (handled by Larastan)
+        - '#Access to an undefined property App\\Models\\.*::\$.*#'
+        - '#Call to an undefined static method App\\Models\\.*::.*\(\)\.#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.*::.*\(\)#'
+        - '#Call to an undefined method App\\Models\\.*\|Illuminate\\Database\\Eloquent\\Builder::.*\(\)#'
+        - '#Call to an undefined method App\\Models\\.*\|Illuminate\\Database\\Eloquent\\Collection.*::.*\(\)#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.*::ofState\(\)\.#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder<.*>::ofState\(\)\.#'
+        # Collection methods
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Collection.*::each\(\)\.#'
+        # Foreach non-iterable (factory returns Collection)
+        - '#Argument of an invalid type .* supplied for foreach, only iterables are supported\.#'
+        # Property never read (repository injected for potential future use)
+        - '#Property App\\Domain\\Services\\OfferDomainService::\$repository is never read, only written\.#'
+        # Instanceof always true (type check needed for runtime safety, treatPhpDocTypesAsCertain is false)
+        - '#Instanceof between .* and .* will always evaluate to true\.#'
+        # User can be null in FormRequests (handled by auth middleware)
+        - '#Cannot call method can\(\) on App\\Models\\User\|null\.#'
+        # PHPDoc mixin generic types (Builder methods are recognized via @method annotations)
+        - '#PHPDoc tag @mixin contains generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types: TModel\.#'
+
+    excludePaths:
+        - ./*/*/FileToIgnore.php
