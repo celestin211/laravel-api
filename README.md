@@ -755,6 +755,60 @@ Pour ajouter un badge de statut CI/CD dans le README, ajoutez cette ligne :
 
 Remplacez `votre-groupe/votre-projet` par le chemin de votre projet GitLab.
 
+### GitHub Actions
+
+Le projet inclut également une configuration GitHub Actions complète dans `.github/workflows/ci.yml` qui automatise les tests et la vérification de la qualité du code sur GitHub.
+
+#### Jobs disponibles
+
+Le workflow GitHub Actions est organisé en plusieurs jobs qui s'exécutent en parallèle :
+
+1. **Tests PHPUnit** (`tests`)
+   - Tests unitaires avec PHPUnit
+   - Tests sur PHP 8.2 et 8.3
+   - Utilise SQLite en mémoire pour les tests
+   - Exclut les tests Browser (E2E)
+
+2. **Analyse statique PHPStan** (`phpstan`)
+   - Analyse statique niveau 8
+   - Vérifie la qualité du code
+   - Limite de mémoire : 512M
+
+3. **Vérification formatage Pint** (`pint`)
+   - Vérifie que le code respecte PSR-12
+   - Ne modifie pas le code, seulement vérifie
+
+4. **Vérification qualité complète** (`quality-all`)
+   - Combine PHPStan et Pint en un seul job
+   - Utile pour vérifier rapidement la qualité globale
+
+5. **Build des assets frontend** (`build-assets`)
+   - Compile les assets CSS/JS avec npm
+   - S'exécute uniquement sur les pull requests et la branche main
+
+#### Déclenchement automatique
+
+Le workflow s'exécute automatiquement sur :
+- Push sur les branches `main`, `develop` et `feature/**`
+- Pull requests vers `main` et `develop`
+
+#### Vérifier les résultats
+
+1. Allez sur votre dépôt GitHub
+2. Cliquez sur l'onglet "Actions"
+3. Sélectionnez le workflow "CI" dans la liste
+4. Consultez les résultats de chaque job
+
+#### Badge de statut
+
+Pour ajouter un badge de statut CI/CD dans le README, ajoutez cette ligne :
+
+```markdown
+![CI](https://github.com/votre-username/votre-repo/actions/workflows/ci.yml/badge.svg)
+```
+
+Remplacez `votre-username/votre-repo` par le chemin de votre dépôt GitHub.
+
 ## Guide de navigation dans le code
 
 ### Structure des dossiers
