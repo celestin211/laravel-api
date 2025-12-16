@@ -1,0 +1,164 @@
+# GitLab CI/CD Configuration pour Laravel
+# Documentation: https://docs.gitlab.com/ee/ci/
+
+stages:
+  - test
+  - quality
+  - build
+
+variables:
+  PHP_VERSION: "8.2"
+  COMPOSER_CACHE_DIR: "${CI_PROJECT_DIR}/.composer-cache"
+  NPM_CACHE_DIR: "${CI_PROJECT_DIR}/.npm-cache"
+  APP_ENV: "testing"
+  DB_CONNECTION: "sqlite"
+  DB_DATABASE: ":memory:"
+
+# Cache pour Composer
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - vendor/
+    - .composer-cache/
+    - node_modules/
+    - .npm-cache/
+    - public/build/
+
+# Template pour les jobs PHP
+.php_template: &php_template
+  image: php:${PHP_VERSION}-cli
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install -j$(nproc) zip intl mbstring pdo pdo_sqlite
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer --version
+    - php --version
+
+# Template pour les jobs avec Composer
+.composer_template: &composer_template
+  <<: *php_template
+  before_script:
+    - *php_template
+    - composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+# Tests PHPUnit
+test:unit:
+  <<: *composer_template
+  stage: test
+  script:
+    - cp phpstan.neon.txt phpstan.neon || true
+    - php artisan test --testsuite=Unit
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
+  artifacts:
+    reports:
+      junit: tests/results/phpunit.xml
+    paths:
+      - tests/results/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Tests sans Browser (Unit uniquement)
+test:unit-only:
+  <<: *composer_template
+  stage: test
+  script:
+    - cp phpstan.neon.txt phpstan.neon || true
+    - php artisan test --exclude-testsuite=Browser
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
+  artifacts:
+    reports:
+      junit: tests/results/phpunit.xml
+    paths:
+      - tests/results/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Analyse statique PHPStan
+quality:phpstan:
+  <<: *composer_template
+  stage: quality
+  script:
+    - cp phpstan.neon.txt phpstan.neon || true
+    - vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+  allow_failure: false
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Vérification du formatage avec Pint
+quality:pint-check:
+  <<: *composer_template
+  stage: quality
+  script:
+    - vendor/bin/pint --test
+  allow_failure: false
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Pipeline de qualité complète (analyse + format)
+quality:all:
+  <<: *composer_template
+  stage: quality
+  script:
+    - cp phpstan.neon.txt phpstan.neon || true
+    - echo "🔍 Analyse statique avec PHPStan..."
+    - vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+    - echo "✨ Vérification du formatage avec Pint..."
+    - vendor/bin/pint --test
+  allow_failure: false
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Build des assets (si nécessaire)
+build:assets:
+  image: node:18-alpine
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - public/build/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+  when: manual
+  allow_failure: true
+
+# Job combiné : Tests + Qualité
+test:all:
+  <<: *composer_template
+  stage: test
+  script:
+    - cp phpstan.neon.txt phpstan.neon || true
+    - echo "🧪 Lancement des tests..."
+    - php artisan test --exclude-testsuite=Browser
+    - echo "🔍 Analyse statique avec PHPStan..."
+    - vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+    - echo "✨ Vérification du formatage avec Pint..."
+    - vendor/bin/pint --test
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
+  artifacts:
+    reports:
+      junit: tests/results/phpunit.xml
+    paths:
+      - tests/results/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
