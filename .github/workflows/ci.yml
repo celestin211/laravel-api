@@ -57,7 +57,7 @@ jobs:
           fi
       
       - name: Run Tests (Unit only)
-        run: php artisan test --testsuite=Unit
+        run: php artisan test --testsuite=Unit || exit 1
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"
@@ -92,7 +92,7 @@ jobs:
           fi
       
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app || exit 1
 
   pint:
     name: Laravel Pint Check
@@ -113,7 +113,7 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
       
       - name: Run Pint Check
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test || exit 1
 
   quality-all:
     name: Quality Check (PHPStan + Pint)
@@ -144,10 +144,10 @@ jobs:
           fi
       
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app
+        run: vendor/bin/phpstan analyse --level=8 --memory-limit=512M app || exit 1
       
       - name: Run Pint Check
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test || exit 1
 
   build-assets:
     name: Build Frontend Assets
