@@ -21,3 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# PHPStan output files
+phpstan-output.txt
+phpstan-output-detailed.txt
+phpstan-final.txt
+phpstan.neon.txt
