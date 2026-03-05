@@ -1,4 +1,4 @@
-# Test technique senior — HelloCSE (Laravel)
+# LARAVEL API — HelloCSE (Laravel)
 
 Bienvenue ! Ce dépôt sert de base à un test technique destiné à un·e développeur·se senior PHP/Laravel.
 Votre mission est d’améliorer techniquement l’application existante autour de la gestion d’offres et de produits.
