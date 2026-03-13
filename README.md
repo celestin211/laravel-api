@@ -1,6 +1,6 @@
 # LARAVEL API — HelloCSE (Laravel)
 
-Bienvenue ! Ce dépôt sert d’améliorer techniquement l’application existante autour de la gestion d’offres et de produits en PHP/Laravel.
+Bienvenue ! Ce dépôt sert à améliorer techniquement l’application existante autour de la gestion d’offres et de produits en PHP/Laravel.
 
 ## Objectif général
 
